@@ -15,14 +15,20 @@ export class AuthService {
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(dto.password, salt);
 
+
         // 2. Try to save the new user to the database
         try {
             const user = await this.prisma.user.create({
                 data: {
                     email: dto.email,
                     passwordHash: hashedPassword,
-                    name: dto.name,
+                    firstName: dto.firstName, // Use firstName
+                    lastName: dto.lastName,   // Use lastName
                     handle: dto.handle,
+                    institution: dto.institution,
+                    department: dto.department,
+                    position: dto.position,
+                    interests: dto.interests, // Pass the array of interests
                 },
             });
 

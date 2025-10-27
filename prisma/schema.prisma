@@ -11,11 +11,67 @@ model User {
   id            String    @id @default(uuid())
   email         String    @unique
   passwordHash  String
-  name          String
+  firstName     String    // Renamed from 'name'
+  lastName      String    // New field
   handle        String    @unique
+  institution   String?   // New optional field
+  department    String?   // New optional field
+  position      String?   // Renamed from 'role', now optional
+  interests     String[]  @default([]) // New field: An array of strings
   orcid         String?   @unique
   bio           String?
-  role          String    @default("researcher")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  skills        String[]  @default([]) // For the new skills feature
+  profileImage  String?   // To store the URL of the profile picture
+  // --- NEW FIELDS ---
+  recentActivity  String[]  @default([])
+  collaborators   String[]  @default([])
+  activeProjects  String[]  @default([])
+  achievements    String[]  @default([])
+  // --- RELATIONSHIPS ---
+  // A user can have many publications that they own
+  publications  Publication[]
+  // A user can be an author on many publications
+  authoredPublications PublicationAuthor[]
+}
+
+model Publication {
+  id        String    @id @default(uuid())
+  slug      String    @unique
+  title     String
+  abstract  String?
+  year      Int?
+  venue     String?
+  doi       String?
+  keywords  String[]  @default([])
+  license   String?
+  visibility String   @default("public")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // --- RELATIONSHIPS ---
+  // The user who "owns" or uploaded this publication entry
+  owner     User      @relation(fields: [ownerId], references: [id])
+  ownerId   String
+
+  // The list of authors for this publication
+  authors   PublicationAuthor[]
+}
+
+model PublicationAuthor {
+  authorName String
+  authorOrder Int
+  confirmed  Boolean @default(false)
+
+  // --- RELATIONSHIPS ---
+  publication   Publication @relation(fields: [publicationId], references: [id])
+  publicationId String
+
+  // This can be linked to a registered user on the platform
+  user          User?       @relation(fields: [userId], references: [id])
+  userId        String?
+
+  // Define a composite primary key: a publication can't have the same author order twice
+  @@id([publicationId, authorOrder])
 }

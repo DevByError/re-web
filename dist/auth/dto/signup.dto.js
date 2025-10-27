@@ -14,8 +14,13 @@ const class_validator_1 = require("class-validator");
 class SignupDto {
     email;
     password;
-    name;
+    firstName;
+    lastName;
     handle;
+    institution;
+    department;
+    position;
+    interests;
 }
 exports.SignupDto = SignupDto;
 __decorate([
@@ -33,10 +38,36 @@ __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], SignupDto.prototype, "name", void 0);
+], SignupDto.prototype, "firstName", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], SignupDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], SignupDto.prototype, "handle", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], SignupDto.prototype, "institution", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], SignupDto.prototype, "department", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], SignupDto.prototype, "position", void 0);
+__decorate([
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], SignupDto.prototype, "interests", void 0);
 //# sourceMappingURL=signup.dto.js.map

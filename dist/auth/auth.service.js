@@ -62,8 +62,13 @@ let AuthService = class AuthService {
                 data: {
                     email: dto.email,
                     passwordHash: hashedPassword,
-                    name: dto.name,
+                    firstName: dto.firstName,
+                    lastName: dto.lastName,
                     handle: dto.handle,
+                    institution: dto.institution,
+                    department: dto.department,
+                    position: dto.position,
+                    interests: dto.interests,
                 },
             });
             const { passwordHash, ...result } = user;
