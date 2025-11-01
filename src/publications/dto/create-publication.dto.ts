@@ -25,4 +25,9 @@ export class CreatePublicationDto {
     @IsString({ each: true })
     @IsOptional()
     keywords?: string[];
+
+    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
+    classifications?: string[];
 }

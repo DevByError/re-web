@@ -8,70 +8,141 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  passwordHash  String
-  firstName     String    // Renamed from 'name'
-  lastName      String    // New field
-  handle        String    @unique
-  institution   String?   // New optional field
-  department    String?   // New optional field
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  handle         String    @unique
+  institution    String?
+  department     String?
   position      String?   // Renamed from 'role', now optional
-  interests     String[]  @default([]) // New field: An array of strings
-  orcid         String?   @unique
-  bio           String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  skills        String[]  @default([]) // For the new skills feature
-  profileImage  String?   // To store the URL of the profile picture
-  // --- NEW FIELDS ---
-  recentActivity  String[]  @default([])
-  collaborators   String[]  @default([])
-  activeProjects  String[]  @default([])
-  achievements    String[]  @default([])
-  // --- RELATIONSHIPS ---
-  // A user can have many publications that they own
-  publications  Publication[]
-  // A user can be an author on many publications
+  interests      String[]  @default([])
+  orcid          String?   @unique
+  bio            String?
+  skills         String[]  @default([])
+  profileImage   String?
+  recentActivity String[]  @default([])
+  collaborators  String[]  @default([])
+  activeProjects String[]  @default([])
+  achievements   String[]  @default([])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // --- RELATIONSHIPS FOR PUBLICATIONS & SOCIAL FEATURES ---
+  publications         Publication[]
   authoredPublications PublicationAuthor[]
+  publicationViews     PublicationView[]
+  publicationSaves     PublicationSave[]
+  publicationLikes     PublicationLike[]
+  comments             Comment[]
+  commentLikes         CommentLike[]
 }
 
 model Publication {
-  id        String    @id @default(uuid())
-  slug      String    @unique
-  title     String
-  abstract  String?
-  year      Int?
-  venue     String?
-  doi       String?
-  keywords  String[]  @default([])
-  license   String?
-  visibility String   @default("public")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  slug            String    @unique
+  title           String
+  abstract        String?
+  year            Int?
+  venue           String?
+  doi             String?
+  keywords        String[]  @default([])
+  license         String?
+  visibility      String    @default("public")
+  classifications String[]  @default([])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   // --- RELATIONSHIPS ---
-  // The user who "owns" or uploaded this publication entry
-  owner     User      @relation(fields: [ownerId], references: [id])
-  ownerId   String
-
-  // The list of authors for this publication
-  authors   PublicationAuthor[]
+  ownerId         String
+  owner           User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  authors         PublicationAuthor[]
+  
+  // --- RELATIONSHIPS FOR SOCIAL FEATURES ---
+  views           PublicationView[]
+  saves           PublicationSave[]
+  likes           PublicationLike[]
+  comments        Comment[]
 }
 
 model PublicationAuthor {
-  authorName String
-  authorOrder Int
-  confirmed  Boolean @default(false)
-
-  // --- RELATIONSHIPS ---
-  publication   Publication @relation(fields: [publicationId], references: [id])
+  authorName    String
+  authorOrder   Int
+  confirmed     Boolean     @default(false)
   publicationId String
-
-  // This can be linked to a registered user on the platform
-  user          User?       @relation(fields: [userId], references: [id])
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
   userId        String?
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  // Define a composite primary key: a publication can't have the same author order twice
   @@id([publicationId, authorOrder])
+}
+
+// --- NEW MODELS FOR SOCIAL INTERACTIONS ---
+
+model PublicationView {
+  id            String    @id @default(uuid())
+  viewedAt      DateTime  @default(now())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicationId String
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, publicationId]) // A user's view on a publication is counted once
+}
+
+model PublicationSave {
+  id            String    @id @default(uuid())
+  savedAt       DateTime  @default(now())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicationId String
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, publicationId]) // A user can save a publication only once
+}
+
+model PublicationLike {
+  id            String    @id @default(uuid())
+  likedAt       DateTime  @default(now())
+  isDislike     Boolean   @default(false) // true for dislike, false for like
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicationId String
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, publicationId]) // A user can only have one reaction per publication
+}
+
+model Comment {
+  id            String    @id @default(uuid())
+  text          String    @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  publicationId String
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  
+  // For replies: A comment can have a parent, which is another comment
+  parentId      String?
+  parent        Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[] @relation("CommentReplies")
+  
+  likes         CommentLike[]
+}
+
+model CommentLike {
+  id        String   @id @default(uuid())
+  likedAt   DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
 }

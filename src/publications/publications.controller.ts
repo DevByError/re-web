@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Param, Patch } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
+import { UpdatePublicationDto } from './dto/update-publication.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { LikePublicationDto } from './dto/like-publication.dto';
 
 type UserPayload = { userId: string; email: string; };
 
@@ -22,5 +24,34 @@ export class PublicationsController {
   @Get('mine')
   findAllForUser(@GetUser() user: UserPayload) {
     return this.publicationsService.findAllForUser(user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id') // This handles PATCH /publications/some-id
+  update(
+    @Param('id') id: string,
+    @GetUser() user: UserPayload,
+    @Body() dto: UpdatePublicationDto,
+  ) {
+    return this.publicationsService.update(user.userId, id, dto);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/like')
+  toggleLike(@Param('id') id: string, @GetUser() user: UserPayload, @Body() dto: LikePublicationDto) {
+    return this.publicationsService.toggleLike(user.userId, id, dto.isDislike);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/save')
+  toggleSave(@Param('id') id: string, @GetUser() user: UserPayload) {
+    return this.publicationsService.toggleSave(user.userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/view')
+  recordView(@Param('id') id: string, @GetUser() user: UserPayload) {
+    return this.publicationsService.recordView(user.userId, id);
   }
 }

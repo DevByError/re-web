@@ -16,14 +16,14 @@ export declare class AuthController {
         id: string;
         orcid: string | null;
         bio: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         skills: string[];
         profileImage: string | null;
         recentActivity: string[];
         collaborators: string[];
         activeProjects: string[];
         achievements: string[];
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     login(dto: LoginDto): Promise<{
         access_token: string;
